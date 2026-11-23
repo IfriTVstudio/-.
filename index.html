@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Кифирчик — твой дружелюбный помощник</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root { --primary:#5b4bff; --bg:#f8f9ff; --accent:#ff9e4f; }
+  * { box-sizing: border-box; }
+  body { font-family:'Segoe UI',Roboto,Arial,sans-serif; margin:0; background:var(--bg); color:#222; }
+  header { padding:14px 40px; display:flex; justify-content:space-between; align-items:center;
+           background:#fff; box-shadow:0 2px 10px rgba(0,0,0,.05); position:sticky; top:0; z-index:100; }
+  .logo { display:flex; align-items:center; gap:12px; font-weight:700; font-size:24px; color:var(--primary); }
+  .avatar-header { width:42px; height:42px; }
+  main { padding:40px 20px; max-width:1100px; margin:0 auto; }
+  h1 { text-align:center; margin:10px 0 12px; font-size:42px; }
+  .subtitle { text-align:center; color:#666; max-width:620px; margin:0 auto 40px; font-size:18px; }
+  .hero { text-align:center; margin-bottom:30px; }
+  .hero svg { width:140px; height:140px; animation: float 3s ease-in-out infinite; }
+  @keyframes float { 0%,100% { transform:translateY(0);} 50% { transform:translateY(-12px);} }
+  .features-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:24px; margin-bottom:50px; }
+  .feature-card { background:#fff; padding:24px; border-radius:16px; box-shadow:0 4px 12px rgba(0,0,0,.04); text-align:center; }
+  .feature-icon { font-size:36px; margin-bottom:10px; }
+  .feature-card h3 { margin:6px 0 8px; }
+  .cta-btn { display:inline-block; padding:14px 32px; background:var(--primary); color:#fff; border:none;
+             border-radius:50px; font-weight:600; font-size:16px; cursor:pointer; transition:transform .2s; }
+  .cta-btn:hover { transform:scale(1.05); }
+  .center { text-align:center; }
+  #chat-btn { position:fixed; bottom:24px; right:24px; z-index:9999; width:64px; height:64px; border-radius:50%;
+              background:var(--primary); border:none; cursor:pointer; box-shadow:0 8px 24px rgba(91,75,255,.4);
+              padding:0; display:flex; align-items:center; justify-content:center; }
+  #chat-btn svg { width:44px; height:44px; }
+  #chat-box { position:fixed; bottom:100px; right:24px; z-index:9999; width:360px; height:540px; background:#fff;
+              border-radius:20px; box-shadow:0 12px 48px rgba(0,0,0,.18); display:none; flex-direction:column; overflow:hidden; }
+  #chat-box.open { display:flex; }
+  @media (max-width:500px) {
+    #chat-box { width:100%; height:100%; bottom:0; right:0; border-radius:0; }
+    #chat-btn { bottom:20px; }
+  }
+  #chat-header { background:var(--primary); color:#fff; padding:12px 16px; font-weight:600;
+                 display:flex; align-items:center; gap:12px; }
+  .avatar-chat { width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,.25);
+                 display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .avatar-chat svg { width:30px; height:30px; }
+  #chat-status { font-size:12px; font-weight:400; opacity:.8; margin-left:auto; }
+  #chat-messages { flex:1; overflow-y:auto; padding:16px; background:#f5f7ff;
+                   display:flex; flex-direction:column; gap:10px; }
+  .msg { max-width:85%; padding:10px 14px; border-radius:14px; font-size:15px; line-height:1.45;
+         white-space:pre-wrap; animation:fadeIn .2s ease-out; }
+  .bot { background:#fff; align-self:flex-start; border:1px solid #e5e7f0; }
+  .user { background:var(--primary); color:#fff; align-self:flex-end; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(4px);} to { opacity:1; transform:translateY(0);} }
+  .typing span { animation:blink 1s infinite; display:inline-block; }
+  .typing span:nth-child(2){ animation-delay:.2s; } .typing span:nth-child(3){ animation-delay:.4s; }
+  @keyframes blink { 0%,100% { opacity:.2; } 50% { opacity:1; } }
+  .quick-buttons { display:flex; flex-wrap:wrap; gap:6px; padding:8px 10px; }
+  .q-btn { padding:6px 12px; background:#eef2ff; color:var(--primary); border:none; border-radius:12px;
+           font-size:13px; cursor:pointer; white-space:nowrap; }
+  .q-btn:active { background:#dbe4ff; }
+  #chat-input-row { display:flex; border-top:1px solid #eee; padding:10px; gap:8px; }
+  #chat-input { flex:1; border:none; padding:12px; outline:none; font-size:15px; border-radius:12px; background:#f1f3f8; }
+  #chat-send { border:none; background:var(--accent); color:#fff; padding:0 18px; border-radius:12px;
+               cursor:pointer; font-weight:600; font-size:16px; }
+  footer { text-align:center; padding:30px; color:#999; font-size:14px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg class="avatar-header" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      <rect x="14" y="10" width="36" height="46" rx="8" fill="#FFE6C4" stroke="#FF9E4F" stroke-width="3"/>
+      <rect x="14" y="10" width="36" height="10" rx="5" fill="#FFF8EE" stroke="#FF9E4F" stroke-width="3"/>
+      <rect x="24" y="2" width="16" height="8" rx="4" fill="#FF9E4F"/>
+      <circle cx="26" cy="36" r="3.5" fill="#222"/>
+      <circle cx="38" cy="36" r="3.5" fill="#222"/>
+      <circle cx="27.2" cy="34.8" r="1.1" fill="#fff"/>
+      <circle cx="39.2" cy="34.8" r="1.1" fill="#fff"/>
+      <path d="M27 44c2.5 2.5 7.5 2.5 10 0" stroke="#222" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+      <circle cx="20" cy="42" r="2.6" fill="#FFB6C1" opacity=".7"/>
+      <circle cx="44" cy="42" r="2.6" fill="#FFB6C1" opacity=".7"/>
+    </svg>
+    Кифирчик
+  </div>
+  <button class="cta-btn" onclick="toggleChat()">Поговорить 💬</button>
+</header>
+
+<main>
+  <div class="hero">
+    <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      <rect x="14" y="10" width="36" height="46" rx="8" fill="#FFE6C4" stroke="#FF9E4F" stroke-width="3"/>
+      <rect x="14" y="10" width="36" height="10" rx="5" fill="#FFF8EE" stroke="#FF9E4F" stroke-width="3"/>
+      <rect x="24" y="2" width="16" height="8" rx="4" fill="#FF9E4F"/>
+      <circle cx="26" cy="36" r="3.5" fill="#222"/>
+      <circle cx="38" cy="36" r="3.5" fill="#222"/>
+      <circle cx="27.2" cy="34.8" r="1.1" fill="#fff"/>
+      <circle cx="39.2" cy="34.8" r="1.1" fill="#fff"/>
+      <path d="M27 44c2.5 2.5 7.5 2.5 10 0" stroke="#222" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+      <circle cx="20" cy="42" r="2.6" fill="#FFB6C1" opacity=".7"/>
+      <circle cx="44" cy="42" r="2.6" fill="#FFB6C1" opacity=".7"/>
+    </svg>
+  </div>
+  <h1>Знакомьтесь: Кифирчик</h1>
+  <p class="subtitle">Дружелюбный помощник с базой знаний, калькулятором, памятью диалога и хорошим настроением. Спросите что угодно — он не сдаётся.</p>
+
+  <section class="features-grid">
+    <div class="feature-card"><div class="feature-icon">🧠</div><h3>Знания</h3><p>Космос, история, наука, рецепты, финансы, программирование — и, конечно, кефир.</p></div>
+    <div class="feature-card"><div class="feature-icon">🧮</div><h3>Калькулятор</h3><p>«Сколько будет 12*35» или «20% от 450» — посчитает мгновенно.</p></div>
+    <div class="feature-card"><div class="feature-icon">⏰</div><h3>Время и дата</h3><p>«Который час?» и «Какое сегодня число?» — ответит без запинки.</p></div>
+    <div class="feature-card"><div class="feature-icon">💬</div><h3>Память диалога</h3><p>История беседы сохраняется в браузере — после перезагрузки он скажет «С возвращением!».</p></div>
+    <div class="feature-card"><div class="feature-icon">🤗</div><h3>Характер</h3><p>Приветствует по времени суток, радуется «спасибо» и прощается.</p></div>
+    <div class="feature-card"><div class="feature-icon">⚡</div><h3>Быстрые кнопки</h3><p>Готовые вопросы в один клик — для нетерпеливых.</p></div>
+  </section>
+
+  <div class="center">
+    <button class="cta-btn" onclick="toggleChat()">Начать разговор с Кифирчиком</button>
+  </div>
+</main>
+
+<footer>Сделано с любовью к кефиру · Кифирчик © 2026</footer>
+
+<button id="chat-btn" onclick="toggleChat()" title="Открыть чат с Кифирчиком">
+  <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <rect x="14" y="10" width="36" height="46" rx="8" fill="#FFE6C4"/>
+    <circle cx="26" cy="34" r="3.5" fill="#222"/>
+    <circle cx="38" cy="34" r="3.5" fill="#222"/>
+    <path d="M27 44c2.5 2.5 7.5 2.5 10 0" stroke="#222" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+  </svg>
+</button>
+
+<div id="chat-box">
+  <div id="chat-header">
+    <div class="avatar-chat">
+      <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <rect x="14" y="10" width="36" height="46" rx="8" fill="#FFE6C4"/>
+        <circle cx="26" cy="34" r="3.5" fill="#222"/>
+        <circle cx="38" cy="34" r="3.5" fill="#222"/>
+        <path d="M27 44c2.5 2.5 7.5 2.5 10 0" stroke="#222" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+      </svg>
+    </div>
+    Кифирчик
+    <span id="chat-status">на связи</span>
+  </div>
+  <div id="chat-messages"></div>
+  <div class="quick-buttons">
+    <button class="q-btn" onclick="quickQuestion('расскажи про космос')">Космос</button>
+    <button class="q-btn" onclick="quickQuestion('рецепт борща')">Рецепт борща</button>
+    <button class="q-btn" onclick="quickQuestion('сколько будет 20% от 500')">Калькулятор</button>
+    <button class="q-btn" onclick="quickQuestion('который час?')">Время</button>
+    <button class="q-btn" onclick="quickQuestion('что такое ДНК')">Наука</button>
+    <button class="q-btn" onclick="quickQuestion('анекдот')">Анекдот</button>
+  </div>
+  <div id="chat-input-row">
+    <input id="chat-input" placeholder="Спроси Кифирчика…" autocomplete="off">
+    <button id="chat-send">➤</button>
+  </div>
+</div>
+
+<script>
+const AVATAR = document.getElementById('chat-btn').innerHTML;
+const box = document.getElementById('chat-box');
+const msgs = document.getElementById('chat-messages');
+const input = document.getElementById('chat-input');
+let isBusy = false;
+let history = [];
+
+try {
+  history = JSON.parse(localStorage.getItem('kefirchik_history') || '[]');
+} catch(e) { history = []; }
+
+function saveHistory() {
+  try { localStorage.setItem('kefirchik_history', JSON.stringify(history.slice(-100))); } catch(e) {}
+}
+
+function toggleChat() {
+  box.classList.toggle('open');
+  if (box.classList.contains('open') && msgs.children.length === 0) {
+    if (history.length > 0) {
+      addMsg('bot', 'С возвращением! Я всё помню нашу беседу. Продолжим? 😊');
+    } else {
+      addMsg('bot', getGreeting() + ' Я Кифирчик! Чем могу помочь? 😊');
+    }
+  }
+}
+
+function addMsg(who, text) {
+  const div = document.createElement('div');
+  div.className = 'msg ' + who;
+  div.textContent = text;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showTyping() {
+  const div = document.createElement('div');
+  div.className = 'msg bot typing';
+  div.innerHTML = 'Кифирчик думает <span>•</span><span>•</span><span>•</span>';
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+function send() {
+  if (isBusy) return;
+  const text = input.value.trim();
+  if (!text) return;
+  isBusy = true;
+  addMsg('user', text);
+  input.value = '';
+  const typingEl = showTyping();
+  setTimeout(function() {
+    const reply = getBotReply(text);
+    typingEl.remove();
+    addMsg('bot', reply);
+    history.push({ who: 'user', text: text }, { who: 'bot', text: reply });
+    saveHistory();
+    isBusy = false;
+  }, 500 + Math.random() * 700);
+}
+
+document.getElementById('chat-send').onclick = send;
+input.addEventListener('keydown', function(e) { if (e.key === 'Enter') send(); });
+
+function quickQuestion(q) {
+  input.value = q;
+  if (!box.classList.contains('open')) toggleChat();
+  setTimeout(send, 100);
+}
+
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h >= 5 && h < 12) return 'Доброе утро!';
+  if (h >= 12 && h < 18) return 'Добрый день!';
+  if (h >= 18 && h < 23) return 'Добрый вечер!';
+  return 'Привет, полуночник!';
+}
+
+function parseMath(text) {
+  let t = text.toLowerCase();
+  const pct = t.match(/([0-9]+(?:[.,][0-9]+)?)\s*%\s*от\s*([0-9]+(?:[.,][0-9]+)?)/);
+  if (pct) {
+    const p = parseFloat(pct[1].replace(',', '.'));
+    const n = parseFloat(pct[2].replace(',', '.'));
+    return p / 100 * n;
+  }
+  const safe = text.replace(/[^0-9+\-*/().^\s]/g, '').trim();
+  if (!safe || !/[0-9]/.test(safe) || !/[+\-*/^]/.test(safe)) return null;
+  try {
+    const val = Function('"use strict"; return (' + safe.replace(/\^/g, '**') + ')')();
+    if (typeof val === 'number' && isFinite(val)) return val;
+    return null;
+  } catch(e) { return null; }
+}
+
+function fmtNum(n) {
+  return Number.isInteger(n) ? String(n) : String(Math.round(n * 10000) / 10000);
+}
+
+const KNOWLEDGE = [
+  { keys: ['космос', 'космосе', 'звезд', 'планет', 'галактик', 'вселенно'], w: 10,
+    a: 'Космос — это всё, что есть: примерно 13,8 млрд лет назад случился Большой взрыв, и с тех пор Вселенная расширяется. В наблюдаемой части — около 2 трлн галактик, а наша, Млечный Путь, — лишь одна из них. Кстати, в космосе есть облака спирта гигантского размера. Красиво живёт!' },
+  { keys: ['чёрн', 'черн', 'дыр'], w: 9,
+    a: 'Чёрная дыра — область, где гравитация так сильна, что даже свет не может вырваться. Она образуется, когда массивная звезда умирает и схлопывается. В центре нашей галактики живёт Sagittarius A* массой в 4 млн солнц!' },
+  { keys: ['космонавт', 'гагарин'], w: 8,
+    a: 'Юрий Гагарин — первый человек в космосе! 12 апреля 1961 года он облетел Землю на корабле «Восток-1» за 108 минут. Его знаменитое «Поехали!» знают во всём мире.' },
+  { keys: ['лун'], w: 7,
+    a: 'Луна — единственный естественный спутник Земли. Она удаляется от нас примерно на 3,8 см в год. Первым на неё ступил Нил Армстронг 21 июля 1969 года. И да, флаг там не машет — воздуха-то нет.' },
+  { keys: ['марс'], w: 7,
+    a: 'Марс — красная планета, цвет ей придаёт ржавчина (оксид железа). Там самая высокая гора Солнечной системы — вулкан Олимп высотой 21 км. Сейчас там работают роверы, а люди, возможно, полетят в 2030-х.' },
+  { keys: ['днк', 'ген', 'наследствен'], w: 9,
+    a: 'ДНК — молекула, в которой записана вся наследственная информация. Она выглядит как двойная спираль. Если растянуть ДНК из одной клетки человека в линию, получится нить длиной около 2 метров. Во всех клетках тела суммарно — пара раз до Солнца и обратно!' },
+  { keys: ['гравитац', 'притяжен'], w: 8,
+    a: 'Гравитация — притяжение между всеми телами, у которых есть масса. Ньютон описал её законом всемирного тяготения, а Эйнштейн объяснил глубже: масса искривляет пространство-время, и тела просто «скатываются» в эти воронки.' },
+  { keys: ['врем', 'скорост', 'свет'], w: 6,
+    a: 'Скорость света — 299 792 458 м/с. Это абсолютный рекорд Вселенной: быстрее двигаться нельзя. Поэтому, глядя на звёзды, вы видите прошлое: свет от Солнца идёт до нас 8 минут, а от ближайшей звезды — 4 года.' },
+  { keys: ['океан', 'море', 'вода'], w: 6,
+    a: 'Мировой океан покрывает 71% поверхности Земли и содержит 97% всей воды планеты. Но изучено меньше 5% океанского дна — больше картографировано поверхности Марса, чем наших океанов!' },
+  { keys: ['животн', 'кот', 'кошк'], w: 6,
+    a: 'Кошки мурлычут на частоте 25–150 Гц, и считается, что этот звук помогает им заживлять ткани. Усы нужны им как навигатор: они чувствуют потоки воздуха. И да — кошки спят 16 часов в сутки. Мечта!' },
+  { keys: ['собак'], w: 6,
+    a: 'Собаки различают запахи в 10 000–100 000 раз лучше человека: у них около 300 млн обонятельных рецепторов против наших 6 млн. Нос собаки отпечаток уникален, как отпечаток пальца.' },
+  { keys: ['питон', 'python', 'программирова', 'учить код'], w: 9,
+    a: 'Python — отличный первый язык! Начните с основ: переменные, условия, циклы. Бесплатные курсы: Stepik, Hexlet, «Поколение Python». Пишите маленькие программы сразу — список покупок, угадай число. Главное — практика каждый день по чуть-чуть.' },
+  { keys: ['javascript', 'джаваскрипт', 'js'], w: 8,
+    a: 'JavaScript — язык интернета: на нём оживают все сайты. Работает прямо в браузере, учить легко, применение огромное — от анимации кнопок до серверов. Свежий совет: консоль браузера (F12) — лучший друг начинающего.' },
+  { keys: ['html', 'верст', 'сайт сдела'], w: 8,
+    a: 'HTML — скелет любой страницы: заголовки, абзацы, картинки. CSS отвечает за красоту, JavaScript — за поведение. Этот самый сайт, кстати, построен на этих трёх китах!' },
+  { keys: ['git', 'github'], w: 7,
+    a: 'Git — система контроля версий: хранит историю изменений кода, позволяя откатиться и не потерять работу. GitHub — соцсеть для кода на базе Git. Начать: git init, git add ., git commit -m "мой первый коммит".' },
+  { keys: ['искусственн', 'ии', 'нейросет', 'машинн обучен'], w: 8,
+    a: 'Нейросети учатся на примерах, а не по правилам: им показывают миллионы картинок, и они сами находят закономерности. Я, кстати, тоже из этой породы — только я живу не в дата-центре, а прямо в вашем браузере.' },
+  { keys: ['робот'], w: 6,
+    a: 'Роботы уже собирают машины, сортируют посылки и даже делают операции. А вот роботы-домашние помощники пока на уровне «принеси тапочки, если получится». Ирония в том, что сложнее всего роботам даются банан и шнурок.' },
+  { keys: ['истори', 'древн'], w: 6,
+    a: 'История человечества началась примерно 300 000 лет назад в Африке. Письменность — около 5 000 лет назад в Месопотамии. С тех пор мы построили пирамиды, Рим, средневековые соборы, поезда, интернет — неплохой прогресс!' },
+  { keys: ['пират'], w: 7,
+    a: 'Пираты не всегда были грабителями: часть из них — каперы с официальным разрешением короны грабить вражеские корабли. Знаменитый «весёлый Роджер» служил не только устрашению, но и переговорам: сдавайтесь добровольно — всех оставим живыми.' },
+  { keys: ['египет', 'пирамид'], w: 7,
+    a: 'Пирамиды в Гизе строили около 4 500 лет назад, и до XIX века Большая пирамида была самым высоким зданием на Земле. Рабами строители не были: это наёмные работники, которые получали еду и жильё — археологи нашли даже их «амбулатории».' },
+  { keys: ['книг', 'чита'], w: 5,
+    a: 'Читать — суперспособность, доступная каждому. Классика для старта: «Мастер и Маргарит» Булгакова, «Три товарища» Ремарка, «451 градус по Фаренгейту» Брэдбери. Начните с жанра, который нравится, — привычка появится сама.' },
+  { keys: ['фильм', 'кино', 'сериал', 'посмотрет'], w: 5,
+    a: 'Из вечного: «Интерстеллар», «Матрица», «Друзья», «Шерлок», «Брат». Если нужен вечер под настроение — скажите, грустный или весёлый, подберу!'},
+  { keys: ['анекдот', 'шутк', 'смешн', 'рассмеши'], w: 9,
+    a: 'Программист ставит на ночь два стакана: один с водой — если захочет пить, второй пустой — если не захочет. 🥛' },
+  { keys: ['инвест', 'акци', 'бирж'], w: 8,
+    a: 'Инвестиции — способ заставить деньги работать. База: диверсификация (не держите всё в одном активе), долгосрочность и холодная голова. Начать можно с ИИС и индексных фондов. Я не финсоветник, но правило «не вкладывай последнее» ещё никто не отменял.' },
+  { keys: ['крипт', 'биткоин', 'эфириум'], w: 8,
+    a: 'Биткоин придумал таинственный Сатоши Накамото в 2008 году (кто это — до сих пор загадка). Крипта крайне волатильна: рост в 10 раз и падение в 5 могут чередоваться. Если интересуетесь — изучите сначала, как работает блокчейн.' },
+  { keys: ['ипотек', 'кредит'], w: 8,
+    a: 'Ипотека — кредит на жильё под залог самой квартиры. Ключевое — ставка и срок: разница между 6% и 12% на 20 лет — это сумма, сопоставимая со стоимостью самой квартиры. Всегда считайте полную переплату, а не только ежемесячный платёж.' },
+  { keys: ['деньги', 'накопи', 'бюджет'], w: 7,
+    a: 'Простое правило: 50% на нужное, 30% на желания, 20% на накопления. Сначала — подушка безопасности на 3–6 месяцев жизни, потом уже инвестиции. Копить проще, когда перевод идёт автоматом в день зарплаты.' },
+  { keys: ['сон', 'спат', 'бессонниц'], w: 8,
+    a: 'Взрослому нужно 7–9 часов сна. Лайфхаки: ложиться и вставать в одно время (даже в выходные), экран за час до сна убрать, спальню прохладнее. Дневной сон полезен, но не больше 20–30 минут, иначе проснётесь разбитым.' },
+  { keys: ['спорт', 'зал', 'трениров', 'фитнес', 'бег'], w: 8,
+    a: 'WHO рекомендует 150+ минут умеренной активности в неделю — это 5 прогулок по 30 минут. Начинать лучше с малого: сегодня 10 минут ходьбы, через месяц — уже привычка. Мышцы растут не на тренировке, а в отдыхе после неё.' },
+  { keys: ['зарядк', 'утр'], w: 6,
+    a: 'Утренняя зарядка будит лучше кофе: 5–10 минут размяться, потянуться, пару приседаний — и кровь уже побежала. Начните с трёх упражнений, не геройствуйте с первого дня.' },
+  { keys: ['питан', 'диет', 'правильн еда', 'худет'], w: 7,
+    a: 'Здоровое питание скучно и просто: больше овощей, достаточно белка, меньше сахара и переработанной еды. Не нужны диеты-марафоны — нужен режим, на котором вы сможете жить годами. И вода. Много воды.' },
+  { keys: ['кефир'], w: 10,
+    a: 'Мой тёзка! Кефир — ферментированный молочный продукт с кефирным грибком. Полезен для пищеварения, богат белком и кальцием. А лучший кефир — тот, который пьют вместе с хорошей компанией (хотя бы со мной) 😊' },
+  { keys: ['борщ', 'рецепт'], w: 9,
+    a: 'Рецепт борща: 1. Свеклу, морковь и лук — обжарить. 2. Картошку — в бульон. 3. Капусту — когда картошка почти готова. 4. Свекольную зажарку — в самом конце. 5. Чеснок, зелень, ложка сметаны — обязательно. Секрет: борщ вкуснее на второй день!' },
+  { keys: ['блин', 'олад'], w: 8,
+    a: 'Тесто на блины: 2 яйца, 500 мл молока, 200 г муки, щепотка соли, ложка сахара, 2 ложки растительного масла. Жарить на раскалённой сковороде. Первый блин — комом, это традиция, а не провал.' },
+  { keys: ['пельмен', 'вареник'], w: 8,
+    a: 'Пельмени: тесто из муки, воды и яйца, фарш из свинины с говядиной, лук, соль, перец. Лепить — горкой, варить 7–10 минут после всплытия. Едят со сметаной, маслом или уксусом — споры об этом вечны.' },
+  { keys: ['погод', 'дожд', 'снег'], w: 8,
+    a: 'Я живу в вашем браузере и окна отсюда не вижу 😅 За точным прогнозом — Яндекс.Погода. А вообще расскажу: облака — это просто вода, а молния — разряд в миллиарды вольт между небом и землёй.' },
+  { keys: ['врем', 'час'], w: 8, special: 'time' },
+  { keys: ['числ', 'дата', 'сегодня', 'ден'], w: 6, special: 'date' }
+];
+
+function getBotReply(userText) {
+  const t = userText.toLowerCase().trim();
+
+  if (/^(привет|здравств|хай|hello|hi|добр)/.test(t))
+    return getGreeting() + ' Рад видеть! О чём побеседуем?';
+  if (t.includes('как дела') || t.includes('как ты'))
+    return 'Отлично! Бодрюсь, будто только что из холодильника. 😄 А у вас как?';
+  if (t.includes('спасибо') || t.includes('благодар') || t.includes('спс'))
+    return 'Пожалуйста! Обращайтесь — я всегда на связи. 😊';
+  if (t.includes('пока') || t.includes('до свидания') || t.includes('бай') || t.includes('bye'))
+    return 'Пока-пока! Заходите ещё — Кифирчик будет ждать. 👋';
+  if (t.includes('кто ты') || t.includes('ты кто') || t.includes('как тебя'))
+    return 'Я Кифирчик — дружелюбный помощник с базой знаний. Живу прямо на этой странице, отвечаю на вопросы, считаю и поднимаю настроение!';
+  if (t.includes('что умеешь') || t.includes('чем можешь') || t.includes('помощь'))
+    return 'Я умею:\n• отвечать на вопросы — космос, наука, история, рецепты, финансы, программирование\n• считать: «сколько будет 12*35» или «20% от 500»\n• говорить время и дату\n• шутить и просто болтать. Спрашивайте!';
+
+  const mathResult = parseMath(userText);
+  if (mathResult !== null)
+    return 'Считаю: ' + fmtNum(mathResult) + ' 🧮';
+
+  let best = null, bestScore = 0;
+  for (const item of KNOWLEDGE) {
+    let score = 0;
+    for (const k of item.keys) {
+      if (t.includes(k)) score += k.length >= 5 ? 2 : 1;
+    }
+    if (score > bestScore) { bestScore = score; best = item; }
+  }
+  if (best && bestScore >= 2) {
+    if (best.special === 'time') return 'Сейчас ' + new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) + ' ⏰';
+    if (best.special === 'date') {
+      const d = new Date();
+      return 'Сегодня ' + d.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + ' 📅';
+    }
+    return best.a;
+  }
+
+  return 'Хм, это уже за пределами моей базы знаний. Я умел: космос, наука, история, рецепты, финансы, программирование, здоровье и немного мудрости. Попробуйте спросить об этом — или переформулируйте вопрос!';
+}
+</script>
+
+</body>
+</html>
